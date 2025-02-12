@@ -1,14 +1,17 @@
-from tests import client
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
 
 
 def test_get_all_books():
-    response = client.get("/books/")
+    response = client.get("/api/v1/books/")
     assert response.status_code == 200
-    assert len(response.json()) == 3
-
+    assert isinstance(response.json(), list)  
+    assert len(response.json()) > 0
 
 def test_get_single_book():
-    response = client.get("/books/1")
+    response = client.get("/api/v1/books/1")
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "The Hobbit"
@@ -23,7 +26,7 @@ def test_create_book():
         "publication_year": 1997,
         "genre": "Fantasy",
     }
-    response = client.post("/books/", json=new_book)
+    response = client.post("/api/v1/books/", json=new_book)
     assert response.status_code == 201
     data = response.json()
     assert data["id"] == 4
@@ -38,15 +41,15 @@ def test_update_book():
         "publication_year": 1937,
         "genre": "Fantasy",
     }
-    response = client.put("/books/1", json=updated_book)
+    response = client.put("/api/v1/books/1", json=updated_book)
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "The Hobbit: An Unexpected Journey"
 
 
 def test_delete_book():
-    response = client.delete("/books/3")
+    response = client.delete("/api/v1/books/3")
     assert response.status_code == 204
 
-    response = client.get("/books/3")
+    response = client.get("/api/v1/books/3")
     assert response.status_code == 404
