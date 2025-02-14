@@ -13,6 +13,8 @@ class Genre(str, Enum):
     MYSTERY = "Mystery"
     ROMANCE = "Romance"
     THRILLER = "Thriller"
+    DYSTOPIAN = "Dystopian"
+    FICTION = "Fiction" 
 
 
 class Book(BaseModel):
