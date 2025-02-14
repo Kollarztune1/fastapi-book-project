@@ -1,18 +1,20 @@
-# Use the official Python image as the base
-FROM python:3.9
+# Use Python as base image
+FROM python:3.10
 
-# Set the working directory inside the container
+# Install dependencies
 WORKDIR /app
-
-# Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy the app
 COPY . .
 
-# Expose port 8000 for FastAPI
-EXPOSE 8000
+# Install Nginx
+RUN apt update && apt install -y nginx
 
-# Start the FastAPI application using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy Nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Start both FastAPI and Nginx
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 & nginx -g 'daemon off;'"]
+

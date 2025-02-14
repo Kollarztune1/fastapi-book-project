@@ -1,42 +1,25 @@
-name: CD Pipeline
+name: Deploy Application
 
 on:
   push:
     branches:
-      - main  # Run the workflow when changes are pushed to main
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Pulls the repository code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'  # Specify the Python version
-
-      - name: Install dependencies
+      - name: Deploy to Fly.io
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          curl -L https://fly.io/install.sh | sh
+          export FLYCTL_INSTALL="$HOME/.fly"
+          export PATH="$FLYCTL_INSTALL/bin:$PATH"
+          flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Build and push Docker image
-        run: |
-          docker build -t your-dockerhub-username/fastapi-app:latest .
-          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker push your-dockerhub-username/fastapi-app:latest
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            docker pull your-dockerhub-username/fastapi-app:latest
-            docker stop fastapi-container || true
-            docker rm fastapi-container || true
-            docker run -d --name fastapi-container -p 8000:8000 your-dockerhub-username/fastapi-app:latest
